@@ -6,7 +6,10 @@ import org.wso2.siddhi.query.api.definition.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.wso2.siddhi.query.api.definition.StreamDefinition;
+import  org.wso2.siddhi.query.api.definition.Attribute.Type;
 import  org.wso2.siddhi.query.api.definition.Attribute;
+
 /**
  * Created by tharindu on 1/20/15.
  */
@@ -14,36 +17,38 @@ public class DataFormater {
     private static final Log logger = LogFactory.getLog(DataFormater.class);
 
 
-    public static Object[] csvToObjectConverter(String csv,OutputStreamDef def)
+    public static Object[] csvToObjectConverter(String csv,StreamDefinition def)
     {
 
         String [] output=csv.split(",");
 
+        List<Attribute>  attributes=   def.getAttributeList();
         List<Object> list=new ArrayList<>();
         for(int i=0;i<output.length;i++)
         {
 
             logger.error(output[i]);
-            logger.error(def.getAttribute(i).getType());
-            list.add(i, converter(output[i], def.getAttribute(i).getType()));
+
+            logger.error(attributes.get(i).getName());
+            list.add(i, converter(output[i], attributes.get(i).getType()));
         }
 
        return list.toArray();
     }
 
-    public static Object converter(String str,String def)
+    public static Object converter(String str,Type def)
     {
 
         Object value=null;
 
         switch (def)
         {
-            case "int" : value=Integer.valueOf(str);break;
-            case "double" : value=Double.valueOf(str);break;
-            case "float" : value=Float.valueOf(str);break;
-            case "boolean" : value=Double.valueOf(str);break;
-            case "long" : value=Long.valueOf(str);break;
-            case "string": value=str;
+            case INT: value=Integer.valueOf(str);break;
+            case DOUBLE:value=Double.valueOf(str);break;
+            case FLOAT:  value=Float.valueOf(str);break;
+            case BOOL:  value=Double.valueOf(str);break;
+            case LONG:  value=Long.valueOf(str);break;
+            case STRING: value=str;
         }
         return value;
     }

@@ -29,36 +29,12 @@ public class ScriptExecutor {
         //    create JavaScript engine
         engine= factory.getEngineByName("JavaScript");
         //     evaluate JavaScript code from given file - specified by first argument
-        engine.eval(readScript("lib/datavore/datavore-r0.1.js"));
-        engine.eval(readScript("dw.js"));
-        engine.eval(readScript(script));
+        engine.eval(FileHandler.readScript("lib/datavore/datavore-r0.1.js"));
+        engine.eval(FileHandler.readScript("dw.js"));
+        engine.eval(script);
 
         logger.error("All the files added successfully");
 
-    }
-
-    public String readScript(String fileName){
-
-        FileInputStream r;
-        StringBuilder out=null;
-        try {
-
-            InputStream in=ScriptExecutor.class.getResourceAsStream(fileName);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            out             = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                out.append(line+"\n");
-            }
-           // System.out.println(out.toString());   //Prints the string content read from input stream
-            reader.close();
-
-            logger.error(fileName+" is added Successfully");
-
-        }catch (Exception e){
-        logger.error(e.getMessage());
-        }
-        return out.toString();
     }
 
 

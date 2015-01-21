@@ -2,27 +2,29 @@ package org.wso2.siddhi.extension;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
+import org.wso2.siddhi.query.api.definition.Attribute;
+import org.wso2.siddhi.query.api.definition.StreamDefinition;
 /**
  * Created by tharindu on 1/20/15.
  */
+
+
 public class OutputDefJSONParser {
-    public static OutputStreamDef parse(String outputStreamDef)
-    {    OutputStreamDef def=null;
+    public static StreamDefinition parse(String outputStreamDef)
+
+    {    StreamDefinition def=null;
         try{
             JSONObject obj = new JSONObject(outputStreamDef);
             //String pageNam= obj.
-            def=new OutputStreamDef();
-            def.setStreamName(obj.getString("name"));
-            def.setVersion(obj.getString("version"));
+            def=new StreamDefinition().name(obj.getString("name"));
+            //def(obj.getString("name"));
+
             JSONArray array=obj.getJSONArray("data");
 
-            for(int i=0;i<array.length();i++)
-            {
-                Attribute attr=new Attribute();
-                attr.setName(array.getJSONObject(i).getString("name"));
-                attr.setType(array.getJSONObject(i).getString("type"));
-                def.setAttribute(attr,i);
+            for(int i=0;i<array.length();i++) {
+
+                def.attribute(array.getJSONObject(i).getString("name"), Attribute.Type.valueOf(array.getJSONObject(i).getString("type").toUpperCase()));
+
             }
 
 
