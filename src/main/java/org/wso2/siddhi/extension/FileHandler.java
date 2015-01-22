@@ -16,7 +16,6 @@ public class FileHandler {
 
     public static  String readScript(String fileName){
 
-        FileInputStream r;
         StringBuilder out=null;
         try {
 
@@ -27,10 +26,9 @@ public class FileHandler {
             while ((line = reader.readLine()) != null) {
                 out.append(line+"\n");
             }
-            // System.out.println(out.toString());   //Prints the string content read from input stream
             reader.close();
 
-            logger.error(fileName+" is added Successfully");
+            logger.error(fileName + " is added Successfully");
 
         }catch (Exception e){
             logger.error(e.getMessage());

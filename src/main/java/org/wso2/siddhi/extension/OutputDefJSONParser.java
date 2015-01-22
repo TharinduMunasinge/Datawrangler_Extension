@@ -1,5 +1,7 @@
 package org.wso2.siddhi.extension;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.wso2.siddhi.query.api.definition.Attribute;
@@ -10,14 +12,14 @@ import org.wso2.siddhi.query.api.definition.StreamDefinition;
 
 
 public class OutputDefJSONParser {
+    private static final Log logger = LogFactory.getLog(RegistryClient.class);
+
     public static StreamDefinition parse(String outputStreamDef)
 
     {    StreamDefinition def=null;
         try{
             JSONObject obj = new JSONObject(outputStreamDef);
-            //String pageNam= obj.
             def=new StreamDefinition().name(obj.getString("name"));
-            //def(obj.getString("name"));
 
             JSONArray array=obj.getJSONArray("data");
 
@@ -27,9 +29,10 @@ public class OutputDefJSONParser {
 
             }
 
+                logger.error("json parsing is done ");
 
         }catch(Exception pe){
-            System.out.println("hellow"+pe);
+            logger.error("JSON parsing Error "+pe);
         }
     return def;
     }

@@ -16,6 +16,19 @@ import  org.wso2.siddhi.query.api.definition.Attribute;
 public class DataFormater {
     private static final Log logger = LogFactory.getLog(DataFormater.class);
 
+    public static String objectArraytoCSV(Object ara[])
+    {
+        StringBuilder builder=new StringBuilder();
+
+        for(int i=0;i<ara.length;i++)
+        {
+            builder.append(ara[i].toString());
+            if(i!=ara.length-1)
+                builder.append(",");
+        }
+        return builder.toString();
+    }
+
 
     public static Object[] csvToObjectConverter(String csv,StreamDefinition def)
     {
@@ -35,6 +48,8 @@ public class DataFormater {
 
        return list.toArray();
     }
+
+
 
     public static Object converter(String str,Type def)
     {

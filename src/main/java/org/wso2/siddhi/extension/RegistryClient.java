@@ -21,12 +21,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by tharindu on 1/20/15.
  */
 public class RegistryClient {
-    public static String outputStreamDef="{\"name\": \"streamName\",\"version\": \"1.0.0\" , \"data\" : [{\"name\" : \"coloumn1\" , \"type\" : \"String\"},{\"name\" : \"coloumn1\" , \"type\" : \"String\"},{\"name\" : \"coloumn1\" , \"type\" : \"String\"}]}";
+
     private static final Log logger = LogFactory.getLog(RegistryClient.class);
+    private static final String BASEURL="/repository/components/org.wso2.cep.wrangler/";
 
 
     public Object[] getStreamDefinitions() throws Exception
     {
+
         ConcurrentHashMap<String, StreamDefinition> map = new ConcurrentHashMap<String, org.wso2.carbon.databridge.commons.StreamDefinition>();
         CarbonContext cCtx = CarbonContext.getCurrentContext();
         int tenantId = cCtx.getTenantId();
@@ -64,7 +66,6 @@ public class RegistryClient {
         else
             logger.error("map has values");
 
-        //return map.values();
         return map.values().toArray();
     }
 
@@ -77,26 +78,40 @@ public class RegistryClient {
             registry = cCtx.getRegistry(RegistryType.valueOf(registryType));
         }
 
-
         try {
-            Resource resource = registry.newResource();
+            Resource resource = (Resource)registry.newResource();
 
             resource.setContent(value);
-           // resourcePath = "/_system/tharindudef";
             registry.put(resourcePath, resource);
-           // logger.error("loaded");
         } catch (RegistryException e) {
-            // TODO Auto-generated catch block
-            logger.error(e.getMessage());
+            logger.error("Registyr client" + e.getMessage());
         }
         catch (Exception e){
-            logger.error(e.getMessage());
+            logger.error("Registry client" + e.getMessage());
         }
     }
 
 
-    public String getOuputStreamDefintion()
+    public String getOuputStreamDefintion(String name)
     {
+        String output=getText(name,"config.json");
+        if(output!=null)
+        {
+
+            return output;
+        }
+        else{
+            logger.error("output defintiion is null");
+            return null;
+        }
+    }
+
+
+
+
+    public String getText(String folderName,String fileName)
+    {
+
         CarbonContext cCtx = CarbonContext.getCurrentContext();
         Registry registry = cCtx.getRegistry(RegistryType.SYSTEM_CONFIGURATION);
         String registryType = RegistryType.SYSTEM_GOVERNANCE.toString();
@@ -106,28 +121,36 @@ public class RegistryClient {
 
 
         try {
-            Resource resource = registry.newResource();
+            logger.error("Retriveing path :" + BASEURL + folderName + "/" + fileName);
+            Resource res=(Resource)registry.get(BASEURL + folderName + "/" + fileName);
+            logger.error(new String((byte[]) res.getContent()));
 
-        //Registry data obtainig logicn is dess
-            String stremdef = "{\"name\": \"velocityStream\",\"version\": \"1.0.0\" , \"data\" : [{\"name\" : \"velocityX\" , \"type\" : \"double\"},{\"name\" : \"velocityY\" , \"type\" : \"double\"},{\"name\" : \"velocityZ\" , \"type\" : \"double\"}]}";
-             return stremdef;
+            return new String((byte[])res.getContent());
 
         } catch (RegistryException e) {
             // TODO Auto-generated catch block
-            logger.error(e.getMessage());
+            logger.error("Error in Registry client" + e.getMessage());
+
         }
         catch (Exception e){
             logger.error(e.getMessage());
         }
 
-return null;
+        return  null;
     }
-
 
     public String getScript(String name)
     {
+        String output=getText(name,"script.js");
+        if(output!=null)
+        {
+            return output;
+        }
+        else{
+            logger.error("script output is null");
+            return null;
+        }
 
-        return FileHandler.readScript(name);
     }
 
 
