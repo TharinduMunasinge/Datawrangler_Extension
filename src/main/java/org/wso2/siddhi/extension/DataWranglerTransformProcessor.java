@@ -1,64 +1,105 @@
 package org.wso2.siddhi.extension;
+
 import org.apache.log4j.Logger;
-import org.wso2.siddhi.core.config.SiddhiContext;
 import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.event.in.InEvent;
 import org.wso2.siddhi.core.event.in.InListEvent;
 import org.wso2.siddhi.core.event.in.InStream;
-import org.wso2.siddhi.core.executor.expression.ExpressionExecutor;
 import org.wso2.siddhi.core.query.processor.transform.TransformProcessor;
+import org.wso2.siddhi.extension.io.RegistryClient;
+import org.wso2.siddhi.extension.util.DataFormater;
+import org.wso2.siddhi.extension.util.ScriptExecutor;
 import org.wso2.siddhi.query.api.definition.StreamDefinition;
-import org.wso2.siddhi.query.api.expression.Expression;
-import org.wso2.siddhi.query.api.extension.annotation.SiddhiExtension;
+
 import java.util.HashMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import java.util.List;
 import java.util.Map;
-import org.wso2.siddhi.query.api.expression.constant.StringConstant;
 
-@SiddhiExtension(namespace = "datawrangler", function = "wrangleEvent")
+/*********************************************************************************************
+ * This class doesn't provide concreate implementation of init method and annotations
+ * But provides the common behavior of 2 concrete classes
+ *********************************************************************************************/
 
-public class DataWranglerTransformProcessor extends TransformProcessor {
-   private Map<String, Integer> paramPositions = new HashMap<String, Integer>();
-   private static final Log logger = LogFactory.getLog(DataWranglerTransformProcessor.class);
-   private  ScriptExecutor engine;
-    private RegistryClient registry=new RegistryClient();
+public abstract class DataWranglerTransformProcessor extends TransformProcessor {
+
+    //Attributes ..............................................................................
+
+    private Map<String, Integer> paramPositions = new HashMap<String, Integer>();
+    private static Logger logger = Logger.getLogger(DataWranglerTransformProcessor.class);
+    private ScriptExecutor engine;                                    //JS execution environment
+    private String script = "";                                       //Script as a String
+    private RegistryClient registry = new RegistryClient();           //for registry interaction
 
 
-   public DataWranglerTransformProcessor() throws Exception{
+    //Getters and Setters ......................................................................
+
+    public ScriptExecutor getEngine() {
+        return engine;
+    }
+
+    public void setEngine(ScriptExecutor engine) {
+        this.engine = engine;
+    }
+
+    public String getScript() {
+        return script;
+    }
+
+    public void setScript(String script) {
+        this.script = script;
+    }
+
+    public RegistryClient getRegistry() {
+        return registry;
+    }
+
+    public void setRegistry(RegistryClient registry) {
+        this.registry = registry;
+    }
+
+
+
+    //Constructor Goes here......................................................................
+    public DataWranglerTransformProcessor() {
 
         logger.error("Constructor is Created ");
 
     }
 
 
+    //Methods.....................................................................................
+
+    /**
+     * This method is executed for each event (this is the method that performs any transformation)
+     * @param inEvent :input Event Object
+     * @return        :transformed event object
+     */
     @Override
-    protected InStream processEvent(InEvent inEvent){
-        Object[] data=null;
+    protected InStream processEvent(InEvent inEvent) {
+        Object[] data = null;
         try {
             logger.error(DataFormater.objectArraytoCSV(inEvent.getData()));
 
-            String outputString=((String)engine.execute(DataFormater.objectArraytoCSV(inEvent.getData())));
+            //Convert the event payload to CSV and send as a parameter to the JS CODE
+            String outputString = ((String) engine.execute(DataFormater.objectArraytoCSV(inEvent.getData())));
 
-            outputString=outputString.substring(outputString.indexOf("\n")+1,outputString.lastIndexOf("\n"));
+            //remove the unwanted strings withing the output
+            outputString = outputString.substring(outputString.indexOf("\n") + 1, outputString.lastIndexOf("\n"));
             logger.error(outputString);
-            data=DataFormater.csvToObjectConverter(outputString,this.getOutStreamDefinition());
 
-        }catch (Exception e){
+            //convert the output into objects according to the outputStream definitions
+            data = DataFormater.csvToObjectConverter(outputString, this.getOutStreamDefinition());
+
+        } catch (Exception e) {
             logger.error("Error occured inProcess Event Method" + e.getMessage());
         }
 
-        for(int i=0;i<data.length;i++)
-        {
+        //Show the content of outptustream
+        for (int i = 0; i < data.length; i++) {
             logger.error(data[i]);
         }
 
         return new InEvent(inEvent.getStreamId(), System.currentTimeMillis(), data);
     }
-
-
-
 
 
     @Override
@@ -85,46 +126,28 @@ public class DataWranglerTransformProcessor extends TransformProcessor {
             paramPositions = (Map<String, Integer>) objects[0];
         }
     }
-    @Override
-    protected void init(Expression[] expressions, List<ExpressionExecutor> expressionExecutors, StreamDefinition inStreamDefinition, StreamDefinition outStreamDefinition, String elementId, SiddhiContext siddhiContext) {
-
-        logger.error("Before fetching scripts");
-
-        String configName = ((StringConstant) expressions[0]).getValue();
-        logger.error("configName");
-
-        initialization(configName, outStreamDefinition);
-    }
 
 
-    public void initialization(String configName,StreamDefinition outStreamDefinition)
-    {
-        this.outStreamDefinition=outStreamDefinition;
-
+    /**
+     * This method setup the script ,JS environment and  output stream definition
+     * @param script               : Script need to be executed
+     * @param outStreamDefinition  : OutputStream definition of transformer
+     */
+    public void initialization(String script, StreamDefinition outStreamDefinition) {
         try {
-            engine = new ScriptExecutor(registry.getScript(configName));
-        }catch(Exception e)
-        {
-            logger.error("Unable to  fetching velocityStream enine");
+            this.script = script;
+
+            this.outStreamDefinition = outStreamDefinition;
+            engine = new ScriptExecutor(script);
+        } catch (Exception e) {
+            logger.error("Unable to setup StreamDefinition and  engine");
 
         }
-
-        if(this.outStreamDefinition==null) {
-
-            String stremdef = registry.getOuputStreamDefintion(configName);
-            StreamDefinition outDef = OutputDefJSONParser.parse(stremdef);
-            this.outStreamDefinition=outDef;
-            logger.error("Output definiton is created");
-        }else
-        {
-            logger.error("Out put Definition is already specified");
-        }
-
     }
 
 
     @Override
     public void destroy() {
-    	
+
     }
 }
